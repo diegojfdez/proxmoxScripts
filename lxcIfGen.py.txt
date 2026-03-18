@@ -1,0 +1,32 @@
+#!/usr/bin/python3
+"""
+lxc if conf Generator
+
+Inputs
+- @1 Initial Group Of Students
+- @2  Final Group Of Students
+- @3 Number of students
+
+
+LXC network interface lines will be like:
+net4: name=eth0104,bridge=vmbr0104,firewall=1,hwaddr=BC:24:11:19:40:38,ip6=auto,type=veth
+
+This was 4th if. line example
+"""
+
+import sys
+
+def main():
+    iniIP = int(sys.argv[1])
+    endIP = int(sys.argv[2])
+    numberOfStudents = int(sys.argv[3])
+    netNumber = 0
+    for i in range(iniIP, endIP+1):
+        ii = str(i).zfill(2)
+        for j in range(numberOfStudents+1):
+            netNumber+=1
+            jj = str(j).zfill(2)
+            print(f"net{netNumber}: name=eth{ii}{jj},bridge=vmbr{ii}{jj},firewall=0,hwaddr=BC:24:11:{jj}:{ii}:{jj},ip6=auto,type=veth")
+
+
+main()
