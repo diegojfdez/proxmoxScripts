@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2026-2030 community-scripts ORG
+# Will try to add to community-scripts ORG
 # Author: DJFR
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Usage
@@ -51,17 +51,10 @@ whiptail --backtitle "Proxmox VE Helper Scripts" --title "Proxmox VE Group Users
 
 
 NODE=$(hostname)
-#groups=$(pveum group list --output-format text --noborder --noheader | awk '{print $1}')
-#description=$(pveum group list --output-format text --noborder --noheader | cut -c17-55)
-#users=$(pveum group list --output-format text --noborder --noheader | cut -c57-)
+
 groupUsers=$(pveum group list --output-format text --noborder --noheader | cut -c-16,57-)
 poolIds=$(pveum pool list --output-format text --noborder --noheader | awk '{print $1}')
-#if [ -z "$containers" ]; then
-#  whiptail --title "Proxmox VE Group Management" --msgbox "No Groups available!" 10 60
-#  exit 234
-#fi
 
-#menu_items=("ALL" "Manage All Groups" "OFF") # Add as first option
 FORMAT="%-10s %-2s" # %-10s"
 
 i=0
@@ -91,10 +84,6 @@ echo "EL $selected_ids"
 read -p "Try to delete users pools automatically? (Default: auto) m/a: " DELETE_MODE
 DELETE_MODE=${DELETE_MODE:-a}
 
-# If "ALL" is selected, override with all container IDs
-#if echo "$selected_ids" | grep -q "^ALL$"; then
-#  selected_ids=$(echo "$containers" | awk '{print $1}')
-#fi
 
 for gid in $selected_ids; do
   echo "Grupo $gid"
