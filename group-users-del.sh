@@ -4,7 +4,7 @@
 # Author: DJFR
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Usage
-# To use the PVE Group Creation script, run the command below **only** in the Proxmox VE Shell. This script is intended for managing or enhancing the host system directly.
+# To use the PVE Group Users Deletion script, run the command below **only** in the Proxmox VE Shell. This script is intended for managing or enhancing the host system directly.
 # bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/pve/create-groups.sh)"
 
 function header_info {
@@ -47,7 +47,7 @@ declare -f init_tool_telemetry &>/dev/null && init_tool_telemetry "group-users-d
 
 header_info
 echo "Loading..."
-#whiptail --backtitle "Proxmox VE Helper Scripts" --title "Proxmox VE Group Users Deletion" --yesno "This will erase PVE Group Users. Proceed?" 10 58
+whiptail --backtitle "Proxmox VE Helper Scripts" --title "Proxmox VE Group Users Deletion" --yesno "This will erase PVE Group Users. Proceed?" 10 58
 
 
 NODE=$(hostname)
@@ -103,13 +103,13 @@ for gid in $selected_ids; do
   usersSel=$(echo ${users[$gid]} | tr -s ',' ' ')
   for userid in $usersSel; do
     echo -e "${BL}[Info]${GN} Deleting user $userid...${CL}"
-    echo -e "pveum user delete $userid"
+    pveum user delete $userid
     if [[ "$DELETE_MODE" == "a" ]]; then
       poolID=$(echo $userid|cut -d'@' -f1)
       poolFound=$(echo $poolIds | grep -F -w -q "$poolID")
       if [ -z "$poolFound" ]; then
         echo -e "${BL}[Info]${GN} Found pool...${CL}"
-        echo -e "pveum pool delete $poolID"
+        pveum pool delete $poolID
         echo -e "${BL}[Info]${GN} Pool $userid deleted.${CL}"
       else
         echo -e "${BL}[Info]${YW} Pool not found...${CL}"
@@ -119,8 +119,6 @@ for gid in $selected_ids; do
     sleep .5
   done
 done
-
-exit
 
 header_info
 echo -e "${GN}Deletion process completed.${CL}\n"
