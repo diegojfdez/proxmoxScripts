@@ -1,5 +1,5 @@
 # proxmoxScripts
-Various Shell scripts manage Bridges, Users, Groups and Pools in Proxmox VE.
+Various Shell scripts to manage Bridges, Users, Groups and Pools in Proxmox VE.
 
 ### Script description
 
