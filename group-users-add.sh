@@ -147,87 +147,13 @@ for j in ${!userids[@]} ;do
         --comment \"${poolUserComments[$j]}\""   
   echo -e "${BL}[Info]${GN} Pool ${userids[j]} created.${CL}"
 
-  # & ACLs
-
-  sleep .1
-done
-
-exit
-usersSel=$(echo ${users[$gid]} | tr -s ',' ' ')
-  for userid in $usersSel; do
-    echo -e "${BL}[Info]${GN} Deleting user $userid...${CL}"
-    pveum user delete $userid
-    if [[ "$DELETE_MODE" == "a" ]]; then
-      poolID=$(echo $userid|cut -d'@' -f1)
-      poolFound=$(echo $poolIds | grep -F -w -q "$poolID")
-      if [ -z "$poolFound" ]; then
-        echo -e "${BL}[Info]${GN} Found pool...${CL}"
-        pveum pool delete $poolID
-        echo -e "${BL}[Info]${GN} Pool $userid deleted.${CL}"
-      else
-        echo -e "${BL}[Info]${YW} Pool not found...${CL}"
-      fi
-    fi
-
-
-
-
-
-
-
-
-FORMAT="%-10s %-2s" # %-10s"
-
-i=0
-while read -r group; do
-  groupid=$(echo $group | awk '{print $1}')
-  groups[$i]=$groupid
-  users[$i]=$(echo $group | awk '{print $2}') 
-  someUsers=$(echo ${users[$i]} | cut -c-60 )
-  formatted_line=$(printf "$FORMAT" "$groupid" "$someUsers")
-  menu_items+=("$i" "$formatted_line" "OFF")
-  let i=i+1
-done <<<"$groupUsers"
-
-CHOICES=$(whiptail --title "PVE Group Users Deletion" \
-  --checklist "Select Group(s) to Delete its Users:" 25 100 13 \
-  "${menu_items[@]}" 3>&2 2>&1 1>&3)
-
-if [ -z "$CHOICES" ]; then
-  whiptail --title "PVE Group User Deletion" \
-    --msgbox "No groups selected!" 10 60
-  exit 0
-fi
-
-selected_ids=$(echo "$CHOICES" | tr -d '"' | tr -s ' ' '\n')
-echo "EL $selected_ids"
-
-read -p "Try to delete users pools automatically? (Default: auto) m/a: " DELETE_MODE
-DELETE_MODE=${DELETE_MODE:-a}
-
-
-for gid in $selected_ids; do
-  echo "Grupo $gid"
-  echo ${groups[$gid]}
-  echo ${users[$gid]}
-  usersSel=$(echo ${users[$gid]} | tr -s ',' ' ')
-  for userid in $usersSel; do
-    echo -e "${BL}[Info]${GN} Deleting user $userid...${CL}"
-    pveum user delete $userid
-    if [[ "$DELETE_MODE" == "a" ]]; then
-      poolID=$(echo $userid|cut -d'@' -f1)
-      poolFound=$(echo $poolIds | grep -F -w -q "$poolID")
-      if [ -z "$poolFound" ]; then
-        echo -e "${BL}[Info]${GN} Found pool...${CL}"
-        pveum pool delete $poolID
-        echo -e "${BL}[Info]${GN} Pool $userid deleted.${CL}"
-      else
-        echo -e "${BL}[Info]${YW} Pool not found...${CL}"
-      fi
-    fi
-    echo -e "${BL}[Info]${GN} User $userid deleted.${CL}"
-    sleep .5
-  done
+  # create ACL
+  echo -e "${BL}[Info]${GN} Creating ACL for ${userids[$j]}...${CL}"
+  echo -e "pveum acl modify /pool/$(echo ${userids[$j]}|cut -d'@' -f1) \n\
+        --users ${userids[$j]} \n\
+        --roles \"PVEPoolUser,PVEVMAdmin\""   
+  echo -e "${BL}[Info]${GN} ACL ${userids[j]} created.${CL}"
+  #sleep .1
 done
 
 header_info
