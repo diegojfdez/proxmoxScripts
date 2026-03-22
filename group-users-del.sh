@@ -95,8 +95,7 @@ for gid in $selected_ids; do
     pveum user delete $userid
     if [[ "$DELETE_MODE" == "a" ]]; then
       poolID=$(echo $userid|cut -d'@' -f1)
-      poolFound=$(echo $poolIds | grep -F -w -q "$poolID")
-      if [ -z "$poolFound" ]; then
+      if [ -n $(echo $poolIds | grep -F -w -o "$poolID") ]; then
         echo -e "${BL}[Info]${GN} Found pool...${CL}"
         pveum pool delete $poolID
         echo -e "${BL}[Info]${GN} Pool $userid deleted.${CL}"
