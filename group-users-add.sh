@@ -10,12 +10,12 @@
 function header_info {
   clear
   cat <<"EOF"
-    ____                                          ______                          __  __                       ____       __     __  _           
-   / __ \_________  _  ______ ___  ____  _  __   / ____/________  __  ______     / / / /_______  __________   / __ \___  / /__  / /_(_)___  ____ 
-  / /_/ / ___/ __ \| |/_/ __ `__ \/ __ \| |/_/  / / __/ ___/ __ \/ / / / __ \   / / / / ___/ _ \/ ___/ ___/  / / / / _ \/ / _ \/ __/ / __ \/ __ \
- / ____/ /  / /_/ />  </ / / / / / /_/ />  <   / /_/ / /  / /_/ / /_/ / /_/ /  / /_/ (__  )  __/ /  (__  )  / /_/ /  __/ /  __/ /_/ / /_/ / / / /
-/_/   /_/   \____/_/|_/_/ /_/ /_/\____/_/|_|   \____/_/   \____/\__,_/ .___/   \____/____/\___/_/  /____/  /_____/\___/_/\___/\__/_/\____/_/ /_/ 
-                                                                    /_/                                                                          
+    ____                                          ______                          __  __                       ___       __    ___ __  _           
+   / __ \_________  _  ______ ___  ____  _  __   / ____/________  __  ______     / / / /_______  __________   /   | ____/ /___/ (_) /_(_)___  ____ 
+  / /_/ / ___/ __ \| |/_/ __ `__ \/ __ \| |/_/  / / __/ ___/ __ \/ / / / __ \   / / / / ___/ _ \/ ___/ ___/  / /| |/ __  / __  / / __/ / __ \/ __ \
+ / ____/ /  / /_/ />  </ / / / / / /_/ />  <   / /_/ / /  / /_/ / /_/ / /_/ /  / /_/ (__  )  __/ /  (__  )  / ___ / /_/ / /_/ / / /_/ / /_/ / / / /
+/_/   /_/   \____/_/|_/_/ /_/ /_/\____/_/|_|   \____/_/   \____/\__,_/ .___/   \____/____/\___/_/  /____/  /_/  |_\__,_/\__,_/_/\__/_/\____/_/ /_/ 
+                                                                  /_/                                                                            
 EOF
 }
 
@@ -129,6 +129,7 @@ echo $expiration
 # Traverse students parallel arrays to create users, ACLs and pools
 echo -e "${BL}[Info]${GN} Now we wel start adding user to Group $unit...${CL}"
 for j in ${!userids[@]} ;do
+  # create new user
   echo -e "${BL}[Info]${GN} Creating user ${userids[$j]}...${CL}"
   echo -e "pveum user add ${userids[$j]} \n\
         --comment \"$userComments\" \n\
@@ -137,12 +138,18 @@ for j in ${!userids[@]} ;do
         --firstname \"${firstNames[$j]}\" \n\
         --lastname \"${lastNames[$j]}\" \n\
         --groups $unit \n\
-        --password ${IDs[$j]} \n"   
-    echo -e "${BL}[Info]${GN} User ${userids[j]} created.${CL}"
-    #create pool & ACLs
+        --password ${IDs[$j]}"   
+  echo -e "${BL}[Info]${GN} User ${userids[j]} created.${CL}"
 
+  # create new pool for that user
+  echo -e "${BL}[Info]${GN} Creating pool ${userids[$j]}...${CL}"
+  echo -e "pveum pool add ${userids[$j]} \n\
+        --comment \"${poolUserComments[$j]}\""   
+  echo -e "${BL}[Info]${GN} Pool ${userids[j]} created.${CL}"
 
-    sleep .1
+  # & ACLs
+
+  sleep .1
 done
 
 exit
