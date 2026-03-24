@@ -143,13 +143,13 @@ for j in ${!userids[@]} ;do
           --groups "$unit" \
           --password "${IDs[$j]}"
     echo -e "${BL}[Info]${GN} User ${userids[j]} created.${CL}"
-
-    if [ -z $(echo $poolIds | grep -F -w -o "${userids[$j]}") ]; then
+    poolName=$(echo "${userids[$j]}"|cut -d'@' -f1)
+    if [ -z $(echo $poolIds | grep -F -w -o "$poolName") ]; then
       # create new pool for that user
-      echo -e "${BL}[Info]${GN} Creating pool ${userids[$j]}...${CL}"
-      pveum pool add ${userids[$j]} \
+      echo -e "${BL}[Info]${GN} Creating pool $poolName...${CL}"
+      pveum pool add $poolName \
             --comment "${poolUserComments[$j]}"
-      echo -e "${BL}[Info]${GN} Pool ${userids[j]} created.${CL}"
+      echo -e "${BL}[Info]${GN} Pool $poolName created.${CL}" 
     else
       # Skip creation
       echo -e "${BL}[Warning]${YW} Pool ${userids[$j]} already exists...${CL}"
@@ -157,7 +157,7 @@ for j in ${!userids[@]} ;do
 
     # create ACL
     echo -e "${BL}[Info]${GN} Creating ACL for ${userids[$j]}...${CL}"
-    pveum acl modify /pool/$(echo ${userids[$j]}|cut -d'@' -f1) \
+    pveum acl modify /pool/$poolName \
           --users ${userids[$j]} \
           --roles "PVEPoolUser,PVEVMAdmin"
     echo -e "${BL}[Info]${GN} ACL ${userids[j]} created.${CL}"
@@ -168,6 +168,6 @@ for j in ${!userids[@]} ;do
   #sleep .1
 done
 
-sleep 10
+sleep 2 
 header_info
 echo -e "${GN}Addition process completed.${CL}\n"
