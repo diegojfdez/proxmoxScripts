@@ -87,7 +87,7 @@ while read -r student; do
 
   #Get IDs
   IDs[$i]=$id
-  echo ${IDs[$i]}
+  #echo ${IDs[$i]}
   
   #Get Student Names
   aStudentNames[$i]=$(echo -n $student | awk -F';' '{print $2}') 
@@ -135,20 +135,20 @@ for j in ${!userids[@]} ;do
     # create new user
     echo -e "${BL}[Info]${GN} Creating user ${userids[$j]}...${CL}"
     pveum user add ${userids[$j]} \
-          --comment \"$userComments\" \
-          --email ${emails[$j]} \
+          --comment "$userComments" \
+          --email "${emails[$j]}" \
           --expire $expiration \
-          --firstname \"${firstNames[$j]}\" \
-          --lastname \"${lastNames[$j]}\" \
-          --groups $unit \
-          --password ${IDs[$j]}
+          --firstname "${firstNames[$j]}" \
+          --lastname "${lastNames[$j]}" \
+          --groups "$unit" \
+          --password "${IDs[$j]}"
     echo -e "${BL}[Info]${GN} User ${userids[j]} created.${CL}"
 
     if [ -z $(echo $poolIds | grep -F -w -o "${userids[$j]}") ]; then
       # create new pool for that user
       echo -e "${BL}[Info]${GN} Creating pool ${userids[$j]}...${CL}"
       pveum pool add ${userids[$j]} \
-            --comment \"${poolUserComments[$j]}\"
+            --comment "${poolUserComments[$j]}"
       echo -e "${BL}[Info]${GN} Pool ${userids[j]} created.${CL}"
     else
       # Skip creation
@@ -159,7 +159,7 @@ for j in ${!userids[@]} ;do
     echo -e "${BL}[Info]${GN} Creating ACL for ${userids[$j]}...${CL}"
     pveum acl modify /pool/$(echo ${userids[$j]}|cut -d'@' -f1) \
           --users ${userids[$j]} \
-          --roles \"PVEPoolUser,PVEVMAdmin\"
+          --roles "PVEPoolUser,PVEVMAdmin"
     echo -e "${BL}[Info]${GN} ACL ${userids[j]} created.${CL}"
   else
     # Skip creation
