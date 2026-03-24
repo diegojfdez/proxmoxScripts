@@ -49,7 +49,6 @@ header_info
 echo "Loading..."
 #whiptail --backtitle "Proxmox VE Helper Scripts" --title "Proxmox VE Group Users Addition" --yesno "This will add PVE Users to Groups. Proceed?" 10 58
 
-# C O D I N G    S T A R T S    H E R E   ! ! ! !
 #NODE=$(hostname)
 DOMAIN='institutodh.net'
 
@@ -64,7 +63,7 @@ iconv -c -t ASCII//TRANSLIT -f ISO-8859-1  $inputFile > $inputFileTrans
 
 # Extract unit
 unit=$(tail -1 $inputFileTrans | sed  's/\"\,\"/\"\;\"/'g | awk -F';' '{print $3}'| sed 's/[^[:alnum:]]\+//g'| sed -E 's/([[:digit:]])o/\1/')
-echo $unit
+#echo $unit
 
 
 groups=$(pveum group list --output-format text --noborder --noheader|awk '{print $1}')
@@ -79,7 +78,7 @@ fi
 
 # Extract IDs and Student Names
 students=$(tail +2 $inputFileTrans | sed  's/\"\,\"/\"\;\"/'g | awk -F';' '{print $2";"$1}' | tr -d '\"')
-echo $students
+# echo $students
 
 # Loop students to generate various fields for pveum user and pvem pool
 i=0
@@ -92,29 +91,29 @@ while read -r student; do
   
   #Get Student Names
   aStudentNames[$i]=$(echo -n $student | awk -F';' '{print $2}') 
-  echo ${aStudentNames[$i]}
+#  echo ${aStudentNames[$i]}
   # Generate userid from surnames, first name and ID
   username=$(echo -n ${aStudentNames[$i]} | tr '[:upper:]' '[:lower:]' \
                 | sed -E 's/^([a-z].*) ([a-z])[a-z]*?, (([a-z])[a-z]*)[ ]?(([a-z])[a-z]*)?/\4\6\1\2/')
   userids[$i]=$(echo -n "$username$(echo -n ${IDs[$i]} | cut -c6-8)@pve")
-  echo ${userids[$i]}
+ # echo ${userids[$i]}
 
   # Fullfil Lastnames
   lastNames[$i]=$(echo -n ${aStudentNames[$i]} | cut -d',' -f1)
-  echo ${lastNames[$i]}
+ # echo ${lastNames[$i]}
 
   # Fullfil FirstNames
   firstNames[$i]=$(echo -n ${aStudentNames[$i]} | cut -d',' -f2 | cut -c2-)
-  echo ${firstNames[$i]}
+#  echo ${firstNames[$i]}
 
   # Fullfil emails
   emails[$i]=$(echo -n "$(echo -n ${userids[$i]} | cut -d'@' -f1)@$DOMAIN")
   #cut  -d'@' -f1 
-  echo ${emails[$i]}
+#  echo ${emails[$i]}
 
   # Fullfil User's pool comments
   poolUserComments[$i]="${aStudentNames[$i]} pool"
-  echo ${poolUserComments[$i]}
+  #echo ${poolUserComments[$i]}
 
   let i=i+1
 done <<<"$students"
@@ -122,10 +121,10 @@ done <<<"$students"
 
 # Fullfil User comments
 userComments="$unit Student"
-echo $userComments
+#echo $userComments
 # Account Expiration = now() + 10 months (26298000 seconds)
 expiration=$(echo "$(date +"%s")+26298000"|bc)
-echo $expiration
+#echo $expiration
 
 
 # Traverse students parallel arrays to create users, ACLs and pools
@@ -135,21 +134,21 @@ for j in ${!userids[@]} ;do
   if [ -z $(echo $pveUsers | grep -F -w -o "${userids[$j]}") ]; then
     # create new user
     echo -e "${BL}[Info]${GN} Creating user ${userids[$j]}...${CL}"
-    echo -e "pveum user add ${userids[$j]} \n\
-          --comment \"$userComments\" \n\
-          --email ${emails[$j]} \n\
-          --expire $expiration \n\
-          --firstname \"${firstNames[$j]}\" \n\
-          --lastname \"${lastNames[$j]}\" \n\
-          --groups $unit \n\
-          --password ${IDs[$j]}"   
+    pveum user add ${userids[$j]} \
+          --comment \"$userComments\" \
+          --email ${emails[$j]} \
+          --expire $expiration \
+          --firstname \"${firstNames[$j]}\" \
+          --lastname \"${lastNames[$j]}\" \
+          --groups $unit \
+          --password ${IDs[$j]}
     echo -e "${BL}[Info]${GN} User ${userids[j]} created.${CL}"
 
     if [ -z $(echo $poolIds | grep -F -w -o "${userids[$j]}") ]; then
       # create new pool for that user
       echo -e "${BL}[Info]${GN} Creating pool ${userids[$j]}...${CL}"
-      echo -e "pveum pool add ${userids[$j]} \n\
-            --comment \"${poolUserComments[$j]}\""   
+      pveum pool add ${userids[$j]} \
+            --comment \"${poolUserComments[$j]}\"
       echo -e "${BL}[Info]${GN} Pool ${userids[j]} created.${CL}"
     else
       # Skip creation
@@ -158,9 +157,9 @@ for j in ${!userids[@]} ;do
 
     # create ACL
     echo -e "${BL}[Info]${GN} Creating ACL for ${userids[$j]}...${CL}"
-    echo -e "pveum acl modify /pool/$(echo ${userids[$j]}|cut -d'@' -f1) \n\
-          --users ${userids[$j]} \n\
-          --roles \"PVEPoolUser,PVEVMAdmin\""   
+    pveum acl modify /pool/$(echo ${userids[$j]}|cut -d'@' -f1) \
+          --users ${userids[$j]} \
+          --roles \"PVEPoolUser,PVEVMAdmin\"
     echo -e "${BL}[Info]${GN} ACL ${userids[j]} created.${CL}"
   else
     # Skip creation
@@ -168,6 +167,7 @@ for j in ${!userids[@]} ;do
   fi
   #sleep .1
 done
-exit
+
+sleep 10
 header_info
 echo -e "${GN}Addition process completed.${CL}\n"
