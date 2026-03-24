@@ -60,23 +60,25 @@ inputFile=${1:-"RegAlum.csv"}
 inputFileTrans="RegAlumT.csv"
 
 # Transliteration: Remove accented characters, ñs and so the like from the CSV file
-iconv -t ASCII//TRANSLIT -f ISO-8859-1  $inputFile > $inputFileTrans
+iconv -c -t ASCII//TRANSLIT -f ISO-8859-1  $inputFile > $inputFileTrans
 
 # Extract unit
-unit=$(tail -1 $inputFileTrans | sed  's/\"\,\"/\"\;\"/'g | awk -F';' '{print $3}'| tr -d 'o"\ ')
+unit=$(tail -1 $inputFileTrans | sed  's/\"\,\"/\"\;\"/'g | awk -F';' '{print $3}'| sed 's/[^[:alnum:]]\+//g'| sed -E 's/([[:digit:]])o/\1/')
 echo $unit
 
-# Test if group exists
+
 groups=$(pveum group list --output-format text --noborder --noheader|awk '{print $1}')
-#groupFound=$(echo $groups | grep -F -w -o "$unit")
-#echo $groupFound
+poolIds=$(pveum pool list --output-format text --noborder --noheader | awk '{print $1}')
+pveUsers=$(pveum user list --output-format text --noborder --noheader | awk '{print $1}')
+
+# Test if group exists
 if [ -z $(echo $groups | grep -F -w -o "$unit") ]; then
-  echo -e "${BL}[Error]${RD} Group $unit not found...${CL}"
+  echo -e "${BL}[Error]${YW} Group \n \"$unit\"\n not found...${CL}"
   exit 127 # Soon replace for group creation
 fi
 
 # Extract IDs and Student Names
-students=$(tail +2 RegAlum_transit.csv | sed  's/\"\,\"/\"\;\"/'g | awk -F';' '{print $2";"$1}' | tr -d '\"')
+students=$(tail +2 $inputFileTrans | sed  's/\"\,\"/\"\;\"/'g | awk -F';' '{print $2";"$1}' | tr -d '\"')
 echo $students
 
 # Loop students to generate various fields for pveum user and pvem pool
@@ -129,32 +131,43 @@ echo $expiration
 # Traverse students parallel arrays to create users, ACLs and pools
 echo -e "${BL}[Info]${GN} Now we wel start adding user to Group $unit...${CL}"
 for j in ${!userids[@]} ;do
-  # create new user
-  echo -e "${BL}[Info]${GN} Creating user ${userids[$j]}...${CL}"
-  echo -e "pveum user add ${userids[$j]} \n\
-        --comment \"$userComments\" \n\
-        --email ${emails[$j]} \n\
-        --expire $expiration \n\
-        --firstname \"${firstNames[$j]}\" \n\
-        --lastname \"${lastNames[$j]}\" \n\
-        --groups $unit \n\
-        --password ${IDs[$j]}"   
-  echo -e "${BL}[Info]${GN} User ${userids[j]} created.${CL}"
+  # Test if user exists
+  if [ -z $(echo $pveUsers | grep -F -w -o "${userids[$j]}") ]; then
+    # create new user
+    echo -e "${BL}[Info]${GN} Creating user ${userids[$j]}...${CL}"
+    echo -e "pveum user add ${userids[$j]} \n\
+          --comment \"$userComments\" \n\
+          --email ${emails[$j]} \n\
+          --expire $expiration \n\
+          --firstname \"${firstNames[$j]}\" \n\
+          --lastname \"${lastNames[$j]}\" \n\
+          --groups $unit \n\
+          --password ${IDs[$j]}"   
+    echo -e "${BL}[Info]${GN} User ${userids[j]} created.${CL}"
 
-  # create new pool for that user
-  echo -e "${BL}[Info]${GN} Creating pool ${userids[$j]}...${CL}"
-  echo -e "pveum pool add ${userids[$j]} \n\
-        --comment \"${poolUserComments[$j]}\""   
-  echo -e "${BL}[Info]${GN} Pool ${userids[j]} created.${CL}"
+    if [ -z $(echo $poolIds | grep -F -w -o "${userids[$j]}") ]; then
+      # create new pool for that user
+      echo -e "${BL}[Info]${GN} Creating pool ${userids[$j]}...${CL}"
+      echo -e "pveum pool add ${userids[$j]} \n\
+            --comment \"${poolUserComments[$j]}\""   
+      echo -e "${BL}[Info]${GN} Pool ${userids[j]} created.${CL}"
+    else
+      # Skip creation
+      echo -e "${BL}[Warning]${YW} Pool ${userids[$j]} already exists...${CL}"
+    fi
 
-  # create ACL
-  echo -e "${BL}[Info]${GN} Creating ACL for ${userids[$j]}...${CL}"
-  echo -e "pveum acl modify /pool/$(echo ${userids[$j]}|cut -d'@' -f1) \n\
-        --users ${userids[$j]} \n\
-        --roles \"PVEPoolUser,PVEVMAdmin\""   
-  echo -e "${BL}[Info]${GN} ACL ${userids[j]} created.${CL}"
+    # create ACL
+    echo -e "${BL}[Info]${GN} Creating ACL for ${userids[$j]}...${CL}"
+    echo -e "pveum acl modify /pool/$(echo ${userids[$j]}|cut -d'@' -f1) \n\
+          --users ${userids[$j]} \n\
+          --roles \"PVEPoolUser,PVEVMAdmin\""   
+    echo -e "${BL}[Info]${GN} ACL ${userids[j]} created.${CL}"
+  else
+    # Skip creation
+    echo -e "${BL}[Warning]${YW} User ${userids[$j]} already exists...${CL}"
+  fi
   #sleep .1
 done
-
+exit
 header_info
 echo -e "${GN}Addition process completed.${CL}\n"
