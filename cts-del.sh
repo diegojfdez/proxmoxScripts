@@ -58,26 +58,44 @@ echo "Loading..."
 whiptail --backtitle "Proxmox VE Helper Scripts" --title "Proxmox VE Containers Deletion" --yesno "This will erase all students not running Containers in $NODE. Proceed?" 10 58
 
 
-containersList=$(pct list 2>/dev/null)
+containersList=$(pct list 2>/dev/null|tail +2)
 #poolIds=$(pveum pool list --output-format text --noborder --noheader | awk '{print $1}')
 
 FORMAT="%-10s %-2s" # %-10s"
 
+if [ -z "$containersList" ]; then
+  echo -e "${BL}[Info]${GN} No containers on $NODE.${CL}"
+  exit 0
+fi
+
 i=0
 while read -r container; do
-  if [ "stopped" == "$(echo $container | awk '{print $2}')" ]; then 
-    cts[$i]=$(echo $container | awk '{print $1}')
+  ctid=$(echo $container | awk '{print $1}')
+  ctState=$(echo $container | awk '{print $2}')
+  if [ "stopped" == "$ctState" ]; then 
+    cts[$i]=$ctid
     let i=i+1
+  elif [ "running" == "$ctid" ]; then 
+    echo -e "${BL}[Info]${YW} Container $ctid IS RUNNING and thus WILL NOT BE DELETED ...${CL}"
+    echo -e "${BL}[Info]${GN} Stopping it for a later try...${CL}"
+    echo -e "pct stop ${cts[$i]} --skiplock 1"
+  else
+    echo -e "${BL}[Info]${YW} Container $ctid is in $ctState STATE and thus WILL NOT BE DELETED ...${CL}"
   fi
 done <<<"$containersList"
 
+indexes="${!cts[@]}" 
+if [ -z "$indexes" ]; then
+  echo -e "${BL}[Info]${GN} No containers STOPPED on $NODE.${CL}"
+  exit 0
+fi
 
 for i in ${!cts[@]}; do
   # Will skip if ID is not in students range
   if [ ${cts[$i]} -ge $minCTID ] && [ ${cts[$i]} -le $maxCTID ]; then 
     echo -e "${BL}[Info]${GN} Deleting container ${cts[$i]}...${CL}"
     # Preproduction version (only print command)
-    echo -e "pct destroy ${cts[$i]}"
+    echo -e "pct destroy ${cts[$i]} --force 1 --purge 1"
     # TO-DO Succeded?
     if [ -n "1" ]; then
       echo -e "${BL}[Info]${GN} Container ${cts[$i]} deleted.${CL}"

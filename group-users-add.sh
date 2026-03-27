@@ -4,7 +4,7 @@
 # Author: DJFR
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Usage
-# To use the PVE Group Users Deletion script, run the command below **only** in the Proxmox VE Shell. This script is intended for managing or enhancing the host system directly.
+# To use the PVE Group Users Add script, run the command below **only** in the Proxmox VE Shell. This script is intended for managing or enhancing the host system directly.
 # bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/pve/create-groups.sh)"
 
 function header_info {
