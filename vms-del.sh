@@ -8,7 +8,7 @@
 # bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/pve/create-groups.sh)"
 
 function header_info {
-  clear
+  #clear
   cat <<"EOF"
      ____                                          _    ____  ___        ____       __     __  _           
    / __ \_________  _  ______ ___  ____  _  __   | |  / /  |/  /____   / __ \___  / /__  / /_(_)___  ____ 
@@ -48,7 +48,7 @@ declare -f init_tool_telemetry &>/dev/null && init_tool_telemetry "vms-delete" "
 
 # $1 Optional student lowest VMs ID. Default 100000
 # $2 Optional student highest VMs ID. Default 2000000
-minMVID=${1:-100000}
+minVMID=${1:-100000}
 maxVMID=${2:-2000000}
 
 NODE=$(hostname)
@@ -77,7 +77,7 @@ while read -r vm; do
   elif [ "running" == "$vmState" ]; then 
     echo -e "${BL}[Info]${YW} VM $vmid IS RUNNING and thus WILL NOT BE DELETED ...${CL}"
     echo -e "${BL}[Info]${GN} Stopping it for a later try...${CL}"
-    echo -e "qm stop ${vms[$i]} --skiplock 1"
+    echo -e "qm stop $vmid --skiplock 1"
   else
     echo -e "${BL}[Info]${YW} VM $vmid is in $vmState STATE and thus WILL NOT BE DELETED ...${CL}"
   fi
@@ -91,12 +91,12 @@ fi
 
 for i in ${!vms[@]}; do
   # Will skip if ID is not in students range
-  if [ ${vms[$i]} -ge $minCTID ] && [ ${vms[$i]} -le $maxCTID ]; then 
-    echo -e "${BL}[Info]${GN} Deleting container ${cts[$i]}...${CL}"
+  if [ ${vms[$i]} -ge $minVMID ] && [ ${vms[$i]} -le $maxVMID ]; then 
+    echo -e "${BL}[Info]${GN} Deleting container ${vms[$i]}...${CL}"
     # -purge: removes from backup/replication/HA
     # -destroy-unreferenced-disks: cleans up orphaned disks matching VMID
     # Preproduction version (only print command)
-    echo -e "qm destroy $vmid --purge 1 --destroy-unreferenced-disks 1"
+    echo -e "qm destroy ${vms[$i]} --purge 1 --destroy-unreferenced-disks 1"
     
     # Succeded?
     if [ $? -eq 0 ]; then
@@ -107,10 +107,9 @@ for i in ${!vms[@]}; do
   else
     echo -e "${BL}[Info]${GN} VM ${vms[$i]} skipped.${CL}"
   fi
-  sleep .2
+#  sleep .1
 done
 
-exit
 header_info
 echo -e "${GN}Deletion process completed.${CL}\n"
 

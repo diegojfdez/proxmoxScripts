@@ -75,10 +75,10 @@ while read -r container; do
   if [ "stopped" == "$ctState" ]; then 
     cts[$i]=$ctid
     let i=i+1
-  elif [ "running" == "$ctid" ]; then 
+  elif [ "running" == "$ctState" ]; then 
     echo -e "${BL}[Info]${YW} Container $ctid IS RUNNING and thus WILL NOT BE DELETED ...${CL}"
     echo -e "${BL}[Info]${GN} Stopping it for a later try...${CL}"
-    echo -e "pct stop ${cts[$i]} --skiplock 1"
+    echo -e "pct stop $ctid --skiplock 1"
   else
     echo -e "${BL}[Info]${YW} Container $ctid is in $ctState STATE and thus WILL NOT BE DELETED ...${CL}"
   fi
@@ -108,6 +108,5 @@ for i in ${!cts[@]}; do
   sleep .2
 done
 
-exit
 header_info
 echo -e "${GN}Deletion process completed.${CL}\n"
