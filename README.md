@@ -8,4 +8,7 @@ Various Shell scripts to manage Bridges, Users, Groups and Pools in Proxmox VE.
 **group-users-add.sh** The script ensures the target Security Group exists within the PVE realm. It then iterates through a defined user list in CSV format, creating accounts with standardized credentials and assigning them to the centralized group.
 For every user created, the script automatically generates a dedicated Resource Pool. It applies Access Control Lists (ACLs) to the newly created pools, granting the specific user administrative roles PVEVMAdmin and PVEPoolUser.
 
-**cts-del.sh** A specialized utility for the bulk removal of LXC containers within a specific numerical range. Logic: Performs a "Stop-then-Destroy" sequence to ensure running containers are decommissioned cleanly. Safety Features: Pre-flight Check: Skips IDs from professor or infraestructure, clearing out massive student lab environments at the end of the academic year.
+**cts-del.sh** A specialized utility for the bulk removal of LXC containers within a specific numerical range. Logic: Performs a "Stop-then-Destroy" sequence to ensure running containers are decommissioned cleanly. Safety Features: Pre-flight Check: Skips IDs from professors or infraestructure, clearing out massive student lab environments at the end of the academic year.
+
+
+**vms-del.sh** A specialized utility for the bulk removal of VMs within a specific numerical range. Logic: Performs a "Stop-then-Destroy" sequence to ensure running VMs are decommissioned cleanly. Safety Features: Pre-flight Check: Skips IDs from professors or infraestructure, clearing out massive student lab environments at the end of the academic year.
