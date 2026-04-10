@@ -85,16 +85,23 @@ i=0
 while read -r student; do
   id=$(echo $student | awk -F';' '{print $1}')
 
-  #Get IDs
+  # Get IDs
   IDs[$i]=$id
-  #echo ${IDs[$i]}
+  # echo ${IDs[$i]}
   
-  #Get Student Names
+  # Get Student Names
   aStudentNames[$i]=$(echo -n $student | awk -F';' '{print $2}') 
-#  echo ${aStudentNames[$i]}
-  # Generate userid from surnames, first name and ID
+  # echo ${aStudentNames[$i]}
+
+  # Generate userid from Surnames, First name(s) and ID concatenating:
+  # First letter of 1st Name
+  # First letter of the last First Name
+  # First Surname
+  # First letter of the last Surname
+  # 3 last ID numbers 
   username=$(echo -n ${aStudentNames[$i]} | tr '[:upper:]' '[:lower:]' \
-                | sed -E 's/^([a-z].*) ([a-z])[a-z]*?, (([a-z])[a-z]*)[ ]?(([a-z])[a-z]*)?/\4\6\1\2/')
+           | sed -E 's/^([a-z]+)([ ](([a-z])[a-z]*))*, (([a-z])[a-z]*)([ ](([a-z])[a-z]*))*/\6\9\1\4/' \
+           | tr -d ' ')
   userids[$i]=$(echo -n "$username$(echo -n ${IDs[$i]} | cut -c6-8)@pve")
  # echo ${userids[$i]}
 
