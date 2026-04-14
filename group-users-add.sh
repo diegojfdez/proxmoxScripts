@@ -51,7 +51,7 @@ echo "Loading..."
 
 #NODE=$(hostname)
 DOMAIN='institutodh.net'
-
+execDate=$(date +%Y%m%d%H%M%S)
 # CSV file format
 # "Pupil","ID/Passaport","Unit"
 # "Surname1 Surname2, Name1 Name2","ID","GROUP"
@@ -72,7 +72,7 @@ pveUsers=$(pveum user list --output-format text --noborder --noheader | awk '{pr
 
 # Test if group exists
 if [ -z $(echo $groups | grep -F -w -o "$unit") ]; then
-  echo -e "${BL}[Error]${YW} Group \n \"$unit\"\n not found...${CL}" | tee gua-$(date +%Y%m%d%H%M%S).log
+  echo -e "${BL}[Error]${YW} Group \n \"$unit\"\n not found...${CL}" | tee -a gua-$execDate.log
   exit 127 # Soon replace for group creation
 fi
 
@@ -135,12 +135,12 @@ expiration=$(echo "$(date +"%s")+26298000"|bc)
 
 
 # Traverse students parallel arrays to create users, ACLs and pools
-echo -e "${BL}[Info]${GN} Now we will start adding user to Group $unit...${CL}" | tee gua-$(date +%Y%m%d%H%M%S).log
+echo -e "${BL}[Info]${GN} Now we will start adding user to Group $unit...${CL}" | tee -a gua-$execDate.log
 for j in ${!userids[@]} ;do
   # Test if user exists
   if [ -z $(echo $pveUsers | grep -F -w -o "${userids[$j]}") ]; then
     # create new user
-    echo -e "${BL}[Info]${GN} Creating user ${userids[$j]}...${CL}" | tee gua-$(date +%Y%m%d%H%M%S).log
+    echo -e "${BL}[Info]${GN} Creating user ${userids[$j]}...${CL}" | tee -a gua-$execDate.log
     pveum user add ${userids[$j]} \
           --comment "$userComments" \
           --email "${emails[$j]}" \
@@ -149,31 +149,31 @@ for j in ${!userids[@]} ;do
           --lastname "${lastNames[$j]}" \
           --groups "$unit" \
           --password "${IDs[$j]}"
-    echo -e "${BL}[Info]${GN} User ${userids[j]} created.${CL}" | tee gua-$(date +%Y%m%d%H%M%S).log
+    echo -e "${BL}[Info]${GN} User ${userids[j]} created.${CL}" | tee -a gua-$execDate.log
     poolName=$(echo "${userids[$j]}"|cut -d'@' -f1)
     if [ -z $(echo $poolIds | grep -F -w -o "$poolName") ]; then
       # create new pool for that user
-      echo -e "${BL}[Info]${GN} Creating pool $poolName...${CL}" | tee gua-$(date +%Y%m%d%H%M%S).log
+      echo -e "${BL}[Info]${GN} Creating pool $poolName...${CL}" | tee -a gua-$execDate.log
       pveum pool add $poolName \
             --comment "${poolUserComments[$j]}"
-      echo -e "${BL}[Info]${GN} Pool $poolName created.${CL}" | tee gua-$(date +%Y%m%d%H%M%S).log
+      echo -e "${BL}[Info]${GN} Pool $poolName created.${CL}" | tee -a gua-$execDate.log
     else
       # Skip creation
-      echo -e "${BL}[Warning]${YW} Pool ${userids[$j]} already exists...${CL}" | tee gua-$(date +%Y%m%d%H%M%S).log
+      echo -e "${BL}[Warning]${YW} Pool ${userids[$j]} already exists...${CL}" | tee -a gua-$execDate.log
     fi
 
     # create ACL
-    echo -e "${BL}[Info]${GN} Creating ACL for ${userids[$j]}...${CL}" | tee gua-$(date +%Y%m%d%H%M%S).log
+    echo -e "${BL}[Info]${GN} Creating ACL for ${userids[$j]}...${CL}" | tee -a gua-$execDate.log
     pveum acl modify /pool/$poolName \
           --users ${userids[$j]} \
           --roles "PVEPoolUser,PVEVMAdmin"
-    echo -e "${BL}[Info]${GN} ACL ${userids[j]} created.${CL}" | tee gua-$(date +%Y%m%d%H%M%S).log
+    echo -e "${BL}[Info]${GN} ACL ${userids[j]} created.${CL}" | tee -a gua-$execDate.log
   else
     # Skip creation
-    echo -e "${BL}[Warning]${YW} User ${userids[$j]} already exists...${CL}" | tee gua-$(date +%Y%m%d%H%M%S).log
+    echo -e "${BL}[Warning]${YW} User ${userids[$j]} already exists...${CL}" | -a tee gua-$execDate.log
   fi
-  #sleep .1
 done
 
 header_info
-echo -e "${GN}Addition process completed.${CL}\n" | tee gua-$(date +%Y%m%d%H%M%S).log
+echo -e "${GN}Addition process completed.${CL}\n" | tee -a gua-$execDate.log
+
